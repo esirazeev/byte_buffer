@@ -4,23 +4,23 @@
 
 namespace byte_buffer
 {
-ByteBuffer::ByteBuffer() noexcept : data_{}, size_{}, dataSize_{} {}
+ByteBuffer::ByteBuffer() noexcept : data_{}, dataSize_{}, capacity_{} {}
 
-ByteBuffer::ByteBuffer(std::span<const uint8_t> data) : data_{}, size_{}, dataSize_{}
+ByteBuffer::ByteBuffer(std::span<const uint8_t> data) : data_{}, dataSize_{}, capacity_{}
 {
 	copy(data);
 }
 
-ByteBuffer::ByteBuffer(const ByteBuffer& obj) : data_{}, size_{}, dataSize_{}
+ByteBuffer::ByteBuffer(const ByteBuffer& obj) : data_{}, dataSize_{}, capacity_{}
 {
 	copy(obj.data());
 }
 
-ByteBuffer::ByteBuffer(ByteBuffer&& obj) : data_{}, size_{}, dataSize_{}
+ByteBuffer::ByteBuffer(ByteBuffer&& obj) : data_{}, dataSize_{}, capacity_{}
 {
 	std::swap(data_, obj.data_);
-	std::swap(size_, obj.size_);
 	std::swap(dataSize_, obj.dataSize_);
+	std::swap(capacity_, obj.capacity_);
 }
 
 ByteBuffer& ByteBuffer::operator=(const ByteBuffer& obj)
@@ -37,11 +37,11 @@ ByteBuffer& ByteBuffer::operator=(ByteBuffer&& obj)
 {
 	if (this != &obj)
 	{
-		clear();
+		destroy();
 
 		std::swap(data_, obj.data_);
-		std::swap(size_, obj.size_);
 		std::swap(dataSize_, obj.dataSize_);
+		std::swap(capacity_, obj.capacity_);
 	}
 
 	return *this;
@@ -49,27 +49,30 @@ ByteBuffer& ByteBuffer::operator=(ByteBuffer&& obj)
 
 ByteBuffer::~ByteBuffer()
 {
-	clear();
+	destroy();
 }
 
-void ByteBuffer::reallocate(uint32_t size)
+void ByteBuffer::reserve(uint32_t capacity)
 {
-	allocate(size);
-}
-
-void ByteBuffer::fill(std::span<const uint8_t> data)
-{
-	copy(data);
-}
-
-void ByteBuffer::fill(std::ifstream& file, uint32_t size)
-{
-	if (size_ < size)
+	if (capacity_ < capacity)
 	{
-		allocate(size);
+		allocate(capacity, true);
 	}
+}
 
-	dataSize_ = file.read(reinterpret_cast<char*>(data_), size).gcount();
+void ByteBuffer::fill(std::span<const uint8_t> data, FillingMode mode)
+{
+	prepare_buffer_for_filling(data.size(), mode);
+
+	std::memcpy(data_ + dataSize_, data.data(), data.size());
+	dataSize_ += data.size();
+}
+
+void ByteBuffer::fill(std::ifstream& file, uint32_t size, FillingMode mode)
+{
+	prepare_buffer_for_filling(size, mode);
+
+	dataSize_ += file.read(reinterpret_cast<char*>(data_ + dataSize_), size).gcount();
 }
 
 std::span<const uint8_t> ByteBuffer::data() const noexcept
@@ -89,34 +92,63 @@ bool ByteBuffer::empty() const noexcept
 
 void ByteBuffer::clear()
 {
+	dataSize_ = 0;
+}
+
+void ByteBuffer::destroy()
+{
 	if (data_)
 	{
 		delete[] data_;
 	}
 
 	data_ = nullptr;
-	size_ = 0;
+	capacity_ = 0;
 	dataSize_ = 0;
 }
 
-void ByteBuffer::allocate(uint32_t size)
+void ByteBuffer::allocate(uint32_t size, bool saveExistingData)
 {
-	if (size_ < size)
-	{
-		clear();
+	capacity_ = size;
+	auto newData = new uint8_t[capacity_];
 
-		data_ = new uint8_t[size];
-		size_ = size;
+	if (saveExistingData)
+	{
+		dataSize_ = std::min(dataSize_, capacity_);
+		std::memcpy(newData, data_, dataSize_);
+	}
+	else
+	{
+		dataSize_ = 0;
 	}
 
-	dataSize_ = 0;
+	delete[] data_;
+	data_ = newData;
 }
 
 void ByteBuffer::copy(std::span<const uint8_t> data)
 {
-	allocate(data.size());
+	if (capacity_ < data.size())
+	{
+		allocate(data.size(), false);
+	}
 
 	std::memcpy(data_, data.data(), data.size());
 	dataSize_ = data.size();
+}
+
+void ByteBuffer::prepare_buffer_for_filling(uint32_t size, FillingMode mode)
+{
+	const auto saveExistingData{mode == FillingMode::append};
+	const auto newCapacity{saveExistingData ? dataSize_ + size : size};
+
+	if (capacity_ < newCapacity)
+	{
+		allocate(newCapacity, saveExistingData);
+	}
+	else
+	{
+		dataSize_ = saveExistingData ? dataSize_ : 0;
+	}
 }
 } // namespace byte_buffer

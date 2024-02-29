@@ -6,6 +6,12 @@
 
 namespace byte_buffer
 {
+enum class FillingMode : uint8_t
+{
+	append,
+	truncate
+};
+
 class ByteBuffer final
 {
 public:
@@ -18,26 +24,28 @@ public:
 	~ByteBuffer();
 
 	/**
-	 * @brief Reallocates the buffer size. All current data will be lost.
+	 * @brief Increases the capacity of the buffer.
 	 * 
-	 * @param size New buffer size
+	 * @param capacity New buffer capacity
 	 */
-	void reallocate(uint32_t size);
+	void reserve(uint32_t capacity);
 
 	/**
-	 * @brief Fills the buffer. All current data will be lost.
+	 * @brief Fills the buffer.
 	 * 
 	 * @param data Data
+	 * @param mode Filling mode
 	 */
-	void fill(std::span<const uint8_t> data);
+	void fill(std::span<const uint8_t> data, FillingMode mode);
 
 	/**
-	 * @brief Fills a buffer from a file. All current data will be lost.
+	 * @brief Fills a buffer from a file.
 	 * 
 	 * @param file File object
 	 * @param size File data size
+	 * @param mode Filling mode
 	 */
-	void fill(std::ifstream& file, uint32_t size);
+	void fill(std::ifstream& file, uint32_t size, FillingMode mode);
 
 	/**
 	 * @brief Returns buffer data.
@@ -61,17 +69,23 @@ public:
 	bool empty() const noexcept;
 
 	/**
-	 * @brief Clears and frees all buffer resources. All current data will be lost.
+	 * @brief Removes all data from the buffer.
 	 */
 	void clear();
 
+	/**
+	 * @brief Destroys the buffer and frees all resources.
+	 */
+	void destroy();
+
 private:
-	void allocate(uint32_t size);
+	void allocate(uint32_t size, bool saveExistingData);
 	void copy(std::span<const uint8_t> data);
+	void prepare_buffer_for_filling(uint32_t size, FillingMode mode);
 
 	uint8_t* data_;
-	uint32_t size_;
 	uint32_t dataSize_;
+	uint32_t capacity_;
 };
 } // namespace byte_buffer
 
