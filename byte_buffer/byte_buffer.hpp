@@ -6,12 +6,6 @@
 
 namespace byte_buffer
 {
-enum class FillingMode : uint8_t
-{
-	append,
-	truncate
-};
-
 class ByteBuffer final
 {
 public:
@@ -31,21 +25,34 @@ public:
 	void reserve(uint32_t capacity);
 
 	/**
-	 * @brief Fills the buffer.
+	 * @brief Overwrites the buffer data.
 	 * 
 	 * @param data Data
-	 * @param mode Filling mode
 	 */
-	void fill(std::span<const uint8_t> data, FillingMode mode);
+	void overwrite(std::span<const uint8_t> data);
 
 	/**
-	 * @brief Fills a buffer from a file.
+	 * @brief Overwrites the buffer data from file.
 	 * 
 	 * @param file File object
 	 * @param size File data size
-	 * @param mode Filling mode
 	 */
-	void fill(std::ifstream& file, uint32_t size, FillingMode mode);
+	void overwrite(std::ifstream& file, uint32_t size);
+
+	/**
+	 * @brief Appends data to the buffer.
+	 * 
+	 * @param data Data
+	 */
+	void append(std::span<const uint8_t> data);
+
+	/**
+	 * @brief Appends data to the buffer from file.
+	 * 
+	 * @param file File object
+	 * @param size File data size
+	 */
+	void append(std::ifstream& file, uint32_t size);
 
 	/**
 	 * @brief Returns buffer data.
@@ -79,9 +86,8 @@ public:
 	void destroy();
 
 private:
-	void allocate(uint32_t size, bool saveExistingData);
-	void copy(std::span<const uint8_t> data);
-	void prepare_buffer_for_filling(uint32_t size, FillingMode mode);
+	void reallocate(uint32_t size, bool saveExistingData);
+	void copy(std::span<const uint8_t> data, bool saveExistingData);
 
 	uint8_t* data_;
 	uint32_t dataSize_;

@@ -111,7 +111,7 @@ TEST(byte_buffer_unit_tests, reserve)
 	constexpr auto expectedDataSize{std::size(expectedData)};
 
 	byte_buffer::ByteBuffer buffer;
-	buffer.fill({expectedData, expectedDataSize}, byte_buffer::FillingMode::truncate);
+	buffer.overwrite({expectedData, expectedDataSize});
 	buffer.reserve(200);
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
@@ -120,13 +120,13 @@ TEST(byte_buffer_unit_tests, reserve)
 	ASSERT_FALSE(buffer.empty());
 }
 
-TEST(byte_buffer_unit_tests, fill_truncate_empty_buffer)
+TEST(byte_buffer_unit_tests, overwrite_empty_buffer)
 {
 	constexpr uint8_t expectedData[]{0x1, 0x2, 0x3};
 	constexpr auto expectedDataSize{std::size(expectedData)};
 
 	byte_buffer::ByteBuffer buffer;
-	buffer.fill({expectedData, expectedDataSize}, byte_buffer::FillingMode::truncate);
+	buffer.overwrite({expectedData, expectedDataSize});
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
@@ -134,18 +134,18 @@ TEST(byte_buffer_unit_tests, fill_truncate_empty_buffer)
 	ASSERT_FALSE(buffer.empty());
 }
 
-TEST(byte_buffer_unit_tests, fill_truncate_not_empty_buffer_without_reallocation)
+TEST(byte_buffer_unit_tests, overwrite_not_empty_buffer_without_reallocation)
 {
 	constexpr uint8_t oldData[]{0x1, 0x2, 0x3};
 	constexpr auto oldDataSize{std::size(oldData)};
 
 	byte_buffer::ByteBuffer buffer;
-	buffer.fill({oldData, oldDataSize}, byte_buffer::FillingMode::truncate);
+	buffer.overwrite({oldData, oldDataSize});
 
 	constexpr uint8_t expectedData[]{0x4, 0x5};
 	constexpr auto expectedDataSize{std::size(expectedData)};
 
-	buffer.fill({expectedData, expectedDataSize}, byte_buffer::FillingMode::truncate);
+	buffer.overwrite({expectedData, expectedDataSize});
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
@@ -153,18 +153,18 @@ TEST(byte_buffer_unit_tests, fill_truncate_not_empty_buffer_without_reallocation
 	ASSERT_FALSE(buffer.empty());
 }
 
-TEST(byte_buffer_unit_tests, fill_truncate_not_empty_buffer_with_reallocation)
+TEST(byte_buffer_unit_tests, overwrite_not_empty_buffer_with_reallocation)
 {
 	constexpr uint8_t oldData[]{0x1};
 	constexpr auto oldDataSize{std::size(oldData)};
 
 	byte_buffer::ByteBuffer buffer;
-	buffer.fill({oldData, oldDataSize}, byte_buffer::FillingMode::truncate);
+	buffer.overwrite({oldData, oldDataSize});
 
 	constexpr uint8_t expectedData[]{0x4, 0x5, 0x6, 0x7, 0x8};
 	constexpr auto expectedDataSize{std::size(expectedData)};
 
-	buffer.fill({expectedData, expectedDataSize}, byte_buffer::FillingMode::truncate);
+	buffer.overwrite({expectedData, expectedDataSize});
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
@@ -172,13 +172,13 @@ TEST(byte_buffer_unit_tests, fill_truncate_not_empty_buffer_with_reallocation)
 	ASSERT_FALSE(buffer.empty());
 }
 
-TEST(byte_buffer_unit_tests, fill_append_empty_buffer)
+TEST(byte_buffer_unit_tests, append_empty_buffer)
 {
 	constexpr uint8_t expectedData[]{0x1, 0x2};
 	constexpr auto expectedDataSize{std::size(expectedData)};
 
 	byte_buffer::ByteBuffer buffer;
-	buffer.fill({expectedData, expectedDataSize}, byte_buffer::FillingMode::append);
+	buffer.append({expectedData, expectedDataSize});
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
@@ -186,19 +186,19 @@ TEST(byte_buffer_unit_tests, fill_append_empty_buffer)
 	ASSERT_FALSE(buffer.empty());
 }
 
-TEST(byte_buffer_unit_tests, fill_append_not_empty_buffer_without_reallocation)
+TEST(byte_buffer_unit_tests, append_not_empty_buffer_without_reallocation)
 {
 	constexpr uint8_t oldData[]{0x1, 0x2};
 	constexpr auto oldDataSize{std::size(oldData)};
 
 	byte_buffer::ByteBuffer buffer;
 	buffer.reserve(100);
-	buffer.fill({oldData, oldDataSize}, byte_buffer::FillingMode::append);
+	buffer.append({oldData, oldDataSize});
 
 	constexpr uint8_t newData[]{0x4, 0x5, 0x6};
 	constexpr auto newDataSize{std::size(newData)};
 
-	buffer.fill({newData, newDataSize}, byte_buffer::FillingMode::append);
+	buffer.append({newData, newDataSize});
 
 	constexpr uint8_t expectedData[]{0x1, 0x2, 0x4, 0x5, 0x6};
 	constexpr auto expectedDataSize{std::size(expectedData)};
@@ -209,18 +209,18 @@ TEST(byte_buffer_unit_tests, fill_append_not_empty_buffer_without_reallocation)
 	ASSERT_FALSE(buffer.empty());
 }
 
-TEST(byte_buffer_unit_tests, fill_append_not_empty_buffer_with_reallocation)
+TEST(byte_buffer_unit_tests, append_not_empty_buffer_with_reallocation)
 {
 	constexpr uint8_t oldData[]{0x1, 0x2};
 	constexpr auto oldDataSize{std::size(oldData)};
 
 	byte_buffer::ByteBuffer buffer;
-	buffer.fill({oldData, oldDataSize}, byte_buffer::FillingMode::append);
+	buffer.append({oldData, oldDataSize});
 
 	constexpr uint8_t newData[]{0x4, 0x5, 0x6};
 	constexpr auto newDataSize{std::size(newData)};
 
-	buffer.fill({newData, newDataSize}, byte_buffer::FillingMode::append);
+	buffer.append({newData, newDataSize});
 
 	constexpr uint8_t expectedData[]{0x1, 0x2, 0x4, 0x5, 0x6};
 	constexpr auto expectedDataSize{std::size(expectedData)};
@@ -231,7 +231,7 @@ TEST(byte_buffer_unit_tests, fill_append_not_empty_buffer_with_reallocation)
 	ASSERT_FALSE(buffer.empty());
 }
 
-TEST(byte_buffer_unit_tests, fill_truncate_empty_buffer_from_file)
+TEST(byte_buffer_unit_tests, overwrite_empty_buffer_from_file)
 {
 	constexpr auto fileName{"test"};
 	constexpr uint8_t expectedData[]{0x1, 0x2, 0x3};
@@ -246,7 +246,7 @@ TEST(byte_buffer_unit_tests, fill_truncate_empty_buffer_from_file)
 
 	{
 		std::ifstream file(fileName);
-		buffer.fill(file, expectedDataSize, byte_buffer::FillingMode::truncate);
+		buffer.overwrite(file, expectedDataSize);
 	}
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
@@ -257,13 +257,13 @@ TEST(byte_buffer_unit_tests, fill_truncate_empty_buffer_from_file)
 	std::filesystem::remove(fileName);
 }
 
-TEST(byte_buffer_unit_tests, fill_truncate_not_empty_buffer_without_reallocation_from_file)
+TEST(byte_buffer_unit_tests, overwrite_not_empty_buffer_without_reallocation_from_file)
 {
 	constexpr uint8_t oldData[]{0x1, 0x2, 0x3};
 	constexpr auto oldDataSize{std::size(oldData)};
 
 	byte_buffer::ByteBuffer buffer;
-	buffer.fill({oldData, oldDataSize}, byte_buffer::FillingMode::truncate);
+	buffer.overwrite({oldData, oldDataSize});
 
 	constexpr uint8_t expectedData[]{0x4, 0x5};
 	constexpr auto expectedDataSize{std::size(expectedData)};
@@ -276,7 +276,7 @@ TEST(byte_buffer_unit_tests, fill_truncate_not_empty_buffer_without_reallocation
 
 	{
 		std::ifstream file(fileName);
-		buffer.fill(file, expectedDataSize, byte_buffer::FillingMode::truncate);
+		buffer.overwrite(file, expectedDataSize);
 	}
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
@@ -287,13 +287,13 @@ TEST(byte_buffer_unit_tests, fill_truncate_not_empty_buffer_without_reallocation
 	std::filesystem::remove(fileName);
 }
 
-TEST(byte_buffer_unit_tests, fill_truncate_not_empty_buffer_with_reallocation_from_file)
+TEST(byte_buffer_unit_tests, overwrite_not_empty_buffer_with_reallocation_from_file)
 {
 	constexpr uint8_t oldData[]{0x1};
 	constexpr auto oldDataSize{std::size(oldData)};
 
 	byte_buffer::ByteBuffer buffer;
-	buffer.fill({oldData, oldDataSize}, byte_buffer::FillingMode::truncate);
+	buffer.overwrite({oldData, oldDataSize});
 
 	constexpr uint8_t expectedData[]{0x4, 0x5, 0x6, 0x7, 0x8};
 	constexpr auto expectedDataSize{std::size(expectedData)};
@@ -306,7 +306,7 @@ TEST(byte_buffer_unit_tests, fill_truncate_not_empty_buffer_with_reallocation_fr
 
 	{
 		std::ifstream file(fileName);
-		buffer.fill(file, expectedDataSize, byte_buffer::FillingMode::truncate);
+		buffer.overwrite(file, expectedDataSize);
 	}
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
@@ -317,7 +317,7 @@ TEST(byte_buffer_unit_tests, fill_truncate_not_empty_buffer_with_reallocation_fr
 	std::filesystem::remove(fileName);
 }
 
-TEST(byte_buffer_unit_tests, fill_append_empty_buffer_from_file)
+TEST(byte_buffer_unit_tests, append_empty_buffer_from_file)
 {
 	constexpr uint8_t expectedData[]{0x1, 0x2};
 	constexpr auto expectedDataSize{std::size(expectedData)};
@@ -332,7 +332,7 @@ TEST(byte_buffer_unit_tests, fill_append_empty_buffer_from_file)
 
 	{
 		std::ifstream file(fileName);
-		buffer.fill(file, expectedDataSize, byte_buffer::FillingMode::truncate);
+		buffer.append(file, expectedDataSize);
 	}
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
@@ -343,14 +343,14 @@ TEST(byte_buffer_unit_tests, fill_append_empty_buffer_from_file)
 	std::filesystem::remove(fileName);
 }
 
-TEST(byte_buffer_unit_tests, fill_append_not_empty_buffer_without_reallocation_from_file)
+TEST(byte_buffer_unit_tests, append_not_empty_buffer_without_reallocation_from_file)
 {
 	constexpr uint8_t oldData[]{0x1, 0x2};
 	constexpr auto oldDataSize{std::size(oldData)};
 
 	byte_buffer::ByteBuffer buffer;
 	buffer.reserve(100);
-	buffer.fill({oldData, oldDataSize}, byte_buffer::FillingMode::append);
+	buffer.append({oldData, oldDataSize});
 
 	constexpr uint8_t newData[]{0x4, 0x5, 0x6};
 	constexpr auto newDataSize{std::size(newData)};
@@ -363,7 +363,7 @@ TEST(byte_buffer_unit_tests, fill_append_not_empty_buffer_without_reallocation_f
 
 	{
 		std::ifstream file(fileName);
-		buffer.fill(file, newDataSize, byte_buffer::FillingMode::append);
+		buffer.append(file, newDataSize);
 	}
 
 	constexpr uint8_t expectedData[]{0x1, 0x2, 0x4, 0x5, 0x6};
@@ -377,13 +377,13 @@ TEST(byte_buffer_unit_tests, fill_append_not_empty_buffer_without_reallocation_f
 	std::filesystem::remove(fileName);
 }
 
-TEST(byte_buffer_unit_tests, fill_append_not_empty_buffer_with_reallocation_from_file)
+TEST(byte_buffer_unit_tests, append_not_empty_buffer_with_reallocation_from_file)
 {
 	constexpr uint8_t oldData[]{0x1, 0x2};
 	constexpr auto oldDataSize{std::size(oldData)};
 
 	byte_buffer::ByteBuffer buffer;
-	buffer.fill({oldData, oldDataSize}, byte_buffer::FillingMode::append);
+	buffer.append({oldData, oldDataSize});
 
 	constexpr uint8_t newData[]{0x4, 0x5, 0x6};
 	constexpr auto newDataSize{std::size(newData)};
@@ -396,7 +396,7 @@ TEST(byte_buffer_unit_tests, fill_append_not_empty_buffer_with_reallocation_from
 
 	{
 		std::ifstream file(fileName);
-		buffer.fill(file, newDataSize, byte_buffer::FillingMode::append);
+		buffer.append(file, newDataSize);
 	}
 
 	constexpr uint8_t expectedData[]{0x1, 0x2, 0x4, 0x5, 0x6};
@@ -416,7 +416,7 @@ TEST(byte_buffer_unit_tests, clear)
 	constexpr auto someDataSize{std::size(someData)};
 
 	byte_buffer::ByteBuffer buffer;
-	buffer.fill({someData, someDataSize}, byte_buffer::FillingMode::truncate);
+	buffer.append({someData, someDataSize});
 	buffer.clear();
 
 	ASSERT_EQ(buffer.size(), 0);
