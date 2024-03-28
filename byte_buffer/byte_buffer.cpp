@@ -100,6 +100,11 @@ uint32_t ByteBuffer::size() const noexcept
 	return dataSize_;
 }
 
+uint32_t ByteBuffer::capacity() const noexcept
+{
+	return capacity_;
+}
+
 bool ByteBuffer::empty() const noexcept
 {
 	return dataSize_ == 0;

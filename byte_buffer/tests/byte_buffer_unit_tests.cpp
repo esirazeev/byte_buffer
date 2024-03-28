@@ -12,6 +12,7 @@ TEST(byte_buffer_unit_tests, default_construct)
 	ASSERT_EQ(buffer.data().data(), nullptr);
 	ASSERT_EQ(buffer.data().size(), 0);
 	ASSERT_EQ(buffer.size(), 0);
+	ASSERT_EQ(buffer.capacity(), 0);
 	ASSERT_TRUE(buffer.empty());
 }
 
@@ -23,6 +24,7 @@ TEST(byte_buffer_unit_tests, construct_with_input_data)
 	const byte_buffer::ByteBuffer buffer({expectedData, expectedDataSize});
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 }
@@ -36,10 +38,12 @@ TEST(byte_buffer_unit_tests, copy_construct)
 	const byte_buffer::ByteBuffer bufferNew(bufferOld);
 
 	ASSERT_EQ(bufferOld.size(), expectedDataSize);
+	ASSERT_EQ(bufferOld.capacity(), expectedDataSize);
 	ASSERT_EQ(bufferOld.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, bufferOld.data().data(), expectedDataSize), 0);
 
 	ASSERT_EQ(bufferNew.size(), expectedDataSize);
+	ASSERT_EQ(bufferNew.capacity(), expectedDataSize);
 	ASSERT_EQ(bufferNew.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, bufferNew.data().data(), expectedDataSize), 0);
 }
@@ -54,9 +58,11 @@ TEST(byte_buffer_unit_tests, move_construct)
 
 	ASSERT_EQ(bufferOld.size(), 0);
 	ASSERT_EQ(bufferOld.data().size(), 0);
+	ASSERT_EQ(bufferOld.capacity(), 0);
 	ASSERT_EQ(bufferOld.data().data(), nullptr);
 
 	ASSERT_EQ(bufferNew.size(), expectedDataSize);
+	ASSERT_EQ(bufferNew.capacity(), expectedDataSize);
 	ASSERT_EQ(bufferNew.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, bufferNew.data().data(), expectedDataSize), 0);
 }
@@ -75,10 +81,12 @@ TEST(byte_buffer_unit_tests, copy_assignment_operator)
 	bufferNew = bufferOld;
 
 	ASSERT_EQ(bufferOld.size(), expectedDataSize);
+	ASSERT_EQ(bufferOld.capacity(), expectedDataSize);
 	ASSERT_EQ(bufferOld.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, bufferOld.data().data(), expectedDataSize), 0);
 
 	ASSERT_EQ(bufferNew.size(), expectedDataSize);
+	ASSERT_EQ(bufferNew.capacity(), expectedDataSize);
 	ASSERT_EQ(bufferNew.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, bufferNew.data().data(), expectedDataSize), 0);
 }
@@ -97,24 +105,28 @@ TEST(byte_buffer_unit_tests, move_assignment_operator)
 	bufferNew = std::move(bufferOld);
 
 	ASSERT_EQ(bufferOld.size(), 0);
+	ASSERT_EQ(bufferOld.capacity(), 0);
 	ASSERT_EQ(bufferOld.data().size(), 0);
 	ASSERT_EQ(bufferOld.data().data(), nullptr);
 
 	ASSERT_EQ(bufferNew.size(), expectedDataSize);
+	ASSERT_EQ(bufferNew.capacity(), expectedDataSize);
 	ASSERT_EQ(bufferNew.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, bufferNew.data().data(), expectedDataSize), 0);
 }
 
 TEST(byte_buffer_unit_tests, reserve)
 {
+	constexpr auto expectedCapacity{20};
 	constexpr uint8_t expectedData[]{0x1, 0x2, 0x3};
 	constexpr auto expectedDataSize{std::size(expectedData)};
 
 	byte_buffer::ByteBuffer buffer;
 	buffer.overwrite({expectedData, expectedDataSize});
-	buffer.reserve(200);
+	buffer.reserve(expectedCapacity);
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), expectedCapacity);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -129,6 +141,7 @@ TEST(byte_buffer_unit_tests, overwrite_empty_buffer)
 	buffer.overwrite({expectedData, expectedDataSize});
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -148,6 +161,7 @@ TEST(byte_buffer_unit_tests, overwrite_not_empty_buffer_without_reallocation)
 	buffer.overwrite({expectedData, expectedDataSize});
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), std::size(oldData));
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -167,6 +181,7 @@ TEST(byte_buffer_unit_tests, overwrite_not_empty_buffer_with_reallocation)
 	buffer.overwrite({expectedData, expectedDataSize});
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -181,6 +196,7 @@ TEST(byte_buffer_unit_tests, append_empty_buffer)
 	buffer.append({expectedData, expectedDataSize});
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -188,11 +204,12 @@ TEST(byte_buffer_unit_tests, append_empty_buffer)
 
 TEST(byte_buffer_unit_tests, append_not_empty_buffer_without_reallocation)
 {
+	constexpr auto expectedCapacity{20};
 	constexpr uint8_t oldData[]{0x1, 0x2};
 	constexpr auto oldDataSize{std::size(oldData)};
 
 	byte_buffer::ByteBuffer buffer;
-	buffer.reserve(100);
+	buffer.reserve(expectedCapacity);
 	buffer.append({oldData, oldDataSize});
 
 	constexpr uint8_t newData[]{0x4, 0x5, 0x6};
@@ -204,6 +221,7 @@ TEST(byte_buffer_unit_tests, append_not_empty_buffer_without_reallocation)
 	constexpr auto expectedDataSize{std::size(expectedData)};
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), expectedCapacity);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -226,6 +244,7 @@ TEST(byte_buffer_unit_tests, append_not_empty_buffer_with_reallocation)
 	constexpr auto expectedDataSize{std::size(expectedData)};
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -250,6 +269,7 @@ TEST(byte_buffer_unit_tests, overwrite_empty_buffer_from_file)
 	}
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -280,6 +300,7 @@ TEST(byte_buffer_unit_tests, overwrite_not_empty_buffer_without_reallocation_fro
 	}
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), std::size(oldData));
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -310,6 +331,7 @@ TEST(byte_buffer_unit_tests, overwrite_not_empty_buffer_with_reallocation_from_f
 	}
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -336,6 +358,7 @@ TEST(byte_buffer_unit_tests, append_empty_buffer_from_file)
 	}
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -345,11 +368,12 @@ TEST(byte_buffer_unit_tests, append_empty_buffer_from_file)
 
 TEST(byte_buffer_unit_tests, append_not_empty_buffer_without_reallocation_from_file)
 {
+	constexpr auto expectedCapacity{20};
 	constexpr uint8_t oldData[]{0x1, 0x2};
 	constexpr auto oldDataSize{std::size(oldData)};
 
 	byte_buffer::ByteBuffer buffer;
-	buffer.reserve(100);
+	buffer.reserve(expectedCapacity);
 	buffer.append({oldData, oldDataSize});
 
 	constexpr uint8_t newData[]{0x4, 0x5, 0x6};
@@ -370,6 +394,7 @@ TEST(byte_buffer_unit_tests, append_not_empty_buffer_without_reallocation_from_f
 	constexpr auto expectedDataSize{std::size(expectedData)};
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), expectedCapacity);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -403,6 +428,7 @@ TEST(byte_buffer_unit_tests, append_not_empty_buffer_with_reallocation_from_file
 	constexpr auto expectedDataSize{std::size(expectedData)};
 
 	ASSERT_EQ(buffer.size(), expectedDataSize);
+	ASSERT_EQ(buffer.capacity(), expectedDataSize);
 	ASSERT_EQ(buffer.data().size(), expectedDataSize);
 	ASSERT_EQ(std::memcmp(expectedData, buffer.data().data(), expectedDataSize), 0);
 	ASSERT_FALSE(buffer.empty());
@@ -420,6 +446,7 @@ TEST(byte_buffer_unit_tests, clear)
 	buffer.clear();
 
 	ASSERT_EQ(buffer.size(), 0);
+	ASSERT_EQ(buffer.capacity(), std::size(someData));
 	ASSERT_EQ(buffer.data().size(), 0);
 	ASSERT_TRUE(buffer.empty());
 }

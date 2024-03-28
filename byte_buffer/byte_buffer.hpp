@@ -69,6 +69,13 @@ public:
 	uint32_t size() const noexcept;
 
 	/**
+	 * @brief Returns the size of memory currently allocated for the buffer.
+	 * 
+	 * @return Size of space allocated in buffer
+	 */
+	uint32_t capacity() const noexcept;
+
+	/**
 	 * @brief Checks if the buffer is empty.
 	 * 
 	 * @return `True` if the buffer is empty, otherwise `false`
@@ -80,12 +87,8 @@ public:
 	 */
 	void clear();
 
-	/**
-	 * @brief Destroys the buffer and frees all resources.
-	 */
-	void destroy();
-
 private:
+	void destroy();
 	void reallocate(uint32_t size, bool saveExistingData);
 	void copy(std::span<const uint8_t> data, bool saveExistingData);
 
