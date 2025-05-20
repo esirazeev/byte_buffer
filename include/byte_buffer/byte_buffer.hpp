@@ -1,6 +1,7 @@
 #ifndef INCLUDE_BYTE_BUFFER_HPP
 #define INCLUDE_BYTE_BUFFER_HPP
 
+#include <cstdint>
 #include <fstream>
 #include <span>
 
